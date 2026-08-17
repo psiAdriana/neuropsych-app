@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#5a0f1a"/>
+  <!-- Flor simplificada en borravino claro -->
+  <g transform="translate(96,90)">
+    <!-- Pétalos -->
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#ED6974" opacity="0.9" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#ED6974" opacity="0.85" transform="rotate(45)"/>
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#c06274" opacity="0.8" transform="rotate(90)"/>
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#c06274" opacity="0.75" transform="rotate(135)"/>
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#ED6974" opacity="0.9" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#ED6974" opacity="0.85" transform="rotate(225)"/>
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#c06274" opacity="0.8" transform="rotate(270)"/>
+    <ellipse cx="0" cy="-30" rx="12" ry="22" fill="#c06274" opacity="0.75" transform="rotate(315)"/>
+    <circle cx="0" cy="0" r="14" fill="#f0c0c8"/>
+  </g>
+  <!-- Texto -->
+  <text x="96" y="158" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#f0c0c8" font-weight="bold">NeuroPsych</text>
+</svg>

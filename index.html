@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Plataforma Neuropsicológica · Adriana Meléndez</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#5a0f1a"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="NeuroPsych"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+
+  <!-- React 18 + Babel Standalone -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body,#root{height:100%;width:100%;}
+    body{font-family:'Garamond','Times New Roman',Times,Georgia,serif;background:#fdf6f7;-webkit-font-smoothing:antialiased;}
+    ::-webkit-scrollbar{width:6px;height:6px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:#c06274;border-radius:3px;}
+    #loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#5a0f1a;z-index:9999;transition:opacity 0.5s;}
+    #loader.hidden{opacity:0;pointer-events:none;}
+    #loader-text{color:#f0c0c8;font-family:'Garamond','Times New Roman',serif;font-size:15px;margin-top:20px;letter-spacing:0.05em;text-align:center;padding:0 20px;}
+    #loader-bar{width:200px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;margin-top:12px;overflow:hidden;}
+    #loader-fill{width:30%;height:100%;background:#ED6974;border-radius:2px;transition:width 0.6s;}
+  </style>
+</head>
+<body>
+
+<!-- Loader visible mientras Babel compila el JSX -->
+<div id="loader">
+  <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+    <circle cx="28" cy="28" r="24" stroke="#ED6974" stroke-width="2" opacity="0.25"/>
+    <path d="M28 6 C16 6 6 16 6 28" stroke="#ED6974" stroke-width="2.5" stroke-linecap="round" fill="none">
+      <animateTransform attributeName="transform" type="rotate" from="0 28 28" to="360 28 28" dur="1s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+  <div id="loader-text">Cargando plataforma neuropsicológica...</div>
+  <div id="loader-bar"><div id="loader-fill"></div></div>
+</div>
+
+<div id="root"></div>
+
+<!-- 1. window.storage → localStorage -->
+<script>
+(function(){
+  var PFX = 'npsych_';
+  window.storage = {
+    get: function(k){
+      return new Promise(function(res){
+        try{ var v=localStorage.getItem(PFX+k); res(v===null?null:{key:k,value:v}); }
+        catch(e){ res(null); }
+      });
+    },
+    set: function(k,v){
+      return new Promise(function(res){
+        try{ localStorage.setItem(PFX+k,v); res({key:k,value:v}); }
+        catch(e){ res(null); }
+      });
+    },
+    delete: function(k){
+      return new Promise(function(res){
+        try{ localStorage.removeItem(PFX+k); res({key:k,deleted:true}); }
+        catch(e){ res(null); }
+      });
+    },
+    list: function(prefix){
+      return new Promise(function(res){
+        try{
+          var keys=[];
+          for(var i=0;i<localStorage.length;i++){
+            var k=localStorage.key(i);
+            if(k&&k.startsWith(PFX)){
+              var stripped=k.slice(PFX.length);
+              if(!prefix||stripped.startsWith(prefix)) keys.push(stripped);
+            }
+          }
+          res({keys:keys});
+        }catch(e){ res({keys:[]}); }
+      });
+    }
+  };
+})();
+</script>
+
+<!-- 2. Panel de API key (llamado desde app.jsx después del mount) -->
+<script>
+window.__ANTHROPIC_API_KEY__ = localStorage.getItem('npsych_apikey') || '';
+
+window.showApiKeyPanel = function(){
+  var loader = document.getElementById('loader');
+  var txt    = document.getElementById('loader-text');
+  if(!loader || !txt) return;
+  loader.style.display = 'flex';
+  loader.classList.remove('hidden');
+  txt.innerHTML =
+    '<div style="max-width:320px;text-align:left;padding:0 16px">' +
+      '<p style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">Configuración de IA</p>' +
+      '<p style="font-size:12px;color:#f0c0c8;margin-bottom:14px;line-height:1.5">' +
+        'Para usar el Generador de Informes con IA ingresá tu API key de Anthropic.<br>' +
+        '<span style="opacity:0.7">Sin key, la plataforma funciona igual (solo sin el generador IA).</span>' +
+      '</p>' +
+      '<input id="apikey-input" type="password" placeholder="sk-ant-api03-..." ' +
+        'style="width:100%;padding:9px 12px;border-radius:8px;border:none;font-size:13px;background:#fff;color:#1a0007;outline:none;margin-bottom:10px"/>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button id="apikey-save" style="flex:1;padding:9px;background:#ED6974;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Guardar y continuar</button>' +
+        '<button id="apikey-skip" style="flex:1;padding:9px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">Continuar sin IA</button>' +
+      '</div>' +
+      '<p style="font-size:11px;color:rgba(240,192,200,0.45);margin-top:10px;line-height:1.4">' +
+        'La clave se guarda solo en este navegador. Obtenela en: console.anthropic.com → API Keys' +
+      '</p>' +
+    '</div>';
+
+  document.getElementById('apikey-save').onclick = function(){
+    var k = document.getElementById('apikey-input').value.trim();
+    if(k){ localStorage.setItem('npsych_apikey',k); window.__ANTHROPIC_API_KEY__=k; }
+    hidePanelAndLoader();
+  };
+  document.getElementById('apikey-skip').onclick = hidePanelAndLoader;
+};
+
+function hidePanelAndLoader(){
+  var loader = document.getElementById('loader');
+  var fill   = document.getElementById('loader-fill');
+  if(fill) fill.style.width='100%';
+  setTimeout(function(){ if(loader) loader.classList.add('hidden'); }, 200);
+  setTimeout(function(){ if(loader) loader.style.display='none'; }, 800);
+}
+</script>
+
+<!-- 3. Interceptar fetch para inyectar API key -->
+<script>
+(function(){
+  var _fetch = window.fetch;
+  window.fetch = function(url, opts){
+    if(typeof url==='string' && url.includes('api.anthropic.com')){
+      var key = window.__ANTHROPIC_API_KEY__ || localStorage.getItem('npsych_apikey') || '';
+      if(key){
+        opts = opts || {};
+        opts.headers = Object.assign({}, opts.headers||{}, {
+          'x-api-key': key,
+          'anthropic-dangerous-direct-browser-access': 'true'
+        });
+      }
+    }
+    return _fetch.call(this, url, opts);
+  };
+})();
+</script>
+
+<!-- 4. App JSX — sin data-type="module" para que App quede en scope global -->
+<script type="text/babel" src="app.jsx" data-presets="react"></script>
+
+<!-- 5. Service Worker -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js')
+      .catch(function(e){ console.warn('SW:', e); });
+  });
+}
+</script>
+
+</body>
+</html>
